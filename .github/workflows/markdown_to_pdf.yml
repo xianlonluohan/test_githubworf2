@@ -40,7 +40,9 @@ jobs:
             lmodern \
             tree \
             jq \
-            python3-pip
+            python3-pip \
+            fonts-inter \
+            fonts-jetbrains-mono
           
           pip3 install beautifulsoup4 markdown-it-py
       
@@ -301,7 +303,8 @@ jobs:
                   
                   processed_content = fix_tilde_in_text(processed_content)
                   
-                  processed_content = re.sub(r'<(?!@@@CODE_BLOCK_|@@@INLINE_CODE_|@@@QUOTE_BLOCK_)(?!\/?code>)(?!\/?pre>)(?!\/?span>)(?!\/?div>)(?!\/?p>)(?!\/?br>)[^>]+>', '', processed_content)
+                  # 保留GitHub支持的HTML标签
+                  processed_content = re.sub(r'<(?!@@@CODE_BLOCK_|@@@INLINE_CODE_|@@@QUOTE_BLOCK_)(?!\/?code>)(?!\/?pre>)(?!\/?span>)(?!\/?div>)(?!\/?p>)(?!\/?br>)(?!\/?strong>)(?!\/?em>)(?!\/?b>)(?!\/?i>)[^>]+>', '', processed_content)
                   
                   final_content = restore_code_blocks(processed_content, code_blocks, inline_code_blocks, quote_blocks)
                   
@@ -331,37 +334,67 @@ jobs:
           cat > header.tex << 'EOF'
           \usepackage{xeCJK}
           \usepackage[UTF8]{ctex}
-          \setCJKmainfont{Noto Serif CJK SC}
+          % GitHub风格字体配置
+          \setmainfont{Inter}
+          \setsansfont{Inter}
+          \setCJKmainfont{Noto Sans CJK SC}
           \setCJKsansfont{Noto Sans CJK SC}
+          \setmonofont{JetBrains Mono}
           \setCJKmonofont{Noto Sans Mono CJK SC}
           
           \usepackage[margin=2.0cm]{geometry}
           
+          % GitHub风格超链接
           \usepackage{hyperref}
           \hypersetup{
             colorlinks=true,
-            linkcolor=blue,
-            urlcolor=blue,
-            citecolor=blue,
+            linkcolor=rgb(0.035,0.419,0.854),
+            urlcolor=rgb(0.035,0.419,0.854),
+            citecolor=rgb(0.035,0.419,0.854),
             pdfborder={0 0 0},
+            hidelinks,
           }
           
-          % ========== 核心修改1：GitHub风格代码语法着色 ==========
           \usepackage{listings}
           \usepackage{xcolor}
-          % GitHub配色方案
-          \definecolor{github-bg}{rgb}{0.98,0.98,0.98}
-          \definecolor{github-fg}{rgb}{0.12,0.12,0.12}
-          \definecolor{github-comment}{rgb}{0.63,0.63,0.63} % 注释浅灰色
-          \definecolor{github-keyword}{rgb}{0.00,0.20,0.67} % 关键字蓝色
-          \definecolor{github-string}{rgb}{0.70,0.13,0.13}  % 字符串红色
-          \definecolor{github-type}{rgb}{0.17,0.57,0.69}    % 类型蓝绿色
-          \definecolor{github-literal}{rgb}{0.25,0.50,0.50} % 字面量青绿色
-          \definecolor{github-frame}{rgb}{0.8,0.8,0.8}
+          \usepackage{graphicx}
+          \usepackage{float}
+          \usepackage{placeins}
+          \usepackage{mdframed}
+          \usepackage{xspace}
+          % GitHub风格标题样式
+          \usepackage{titlesec}
+          \titleformat{\section}{\Large\bfseries\sffamily}{}{0em}{}
+          \titlespacing{\section}{0pt}{1em}{0.5em}
+          \titleformat{\subsection}{\large\bfseries\sffamily}{}{0em}{}
+          \titlespacing{\subsection}{0pt}{0.8em}{0.4em}
+          \titleformat{\subsubsection}{\normalsize\bfseries\sffamily}{}{0em}{}
+          \titlespacing{\subsubsection}{0pt}{0.6em}{0.3em}
+          \titleformat{\paragraph}{\normalsize\bfseries\sffamily}{}{0em}{}
+          \titlespacing{\paragraph}{0pt}{0.5em}{0.2em}
+          \titleformat{\subparagraph}{\small\bfseries\sffamily}{}{0em}{}
+          \titlespacing{\subparagraph}{0pt}{0.4em}{0.1em}
           
-          % 通用代码块样式（GitHub风格）
+          \usepackage{caption}
+          \captionsetup[figure]{labelformat=empty, textformat=empty}
+          \usepackage{subcaption}
+          \captionsetup[subfigure]{labelformat=empty, textformat=empty}
+          
+          % GitHub风格代码高亮颜色
+          \definecolor{github-bg}{rgb}{0.98,0.98,0.98}
+          \definecolor{github-comment}{rgb}{0.56,0.63,0.71}
+          \definecolor{github-keyword}{rgb}{0.86,0.08,0.23}
+          \definecolor{github-string}{rgb}{0.17,0.59,0.33}
+          \definecolor{github-type}{rgb}{0.17,0.59,0.86}
+          \definecolor{github-number}{rgb}{0.24,0.46,0.62}
+          \definecolor{github-frame}{rgb}{0.8,0.8,0.8}
+          \definecolor{github-frame2}{rgb}{0,0,0.8}
+          \definecolor{quotebg}{rgb}{0.97,0.97,0.97}
+          \definecolor{quoteframe}{rgb}{0.85,0.85,0.85}
+          
+          % 通用listings配置
           \lstset{
-            basicstyle=\ttfamily\normalsize\selectfont\color{github-fg},
+            basicstyle=\ttfamily\normalsize\selectfont,
             backgroundcolor=\color{github-bg},
             frame=single,
             framesep=8pt,
@@ -382,67 +415,81 @@ jobs:
             escapeinside={(*@}{@*)},
             lineskip=2pt,
             breaklines=true,
-            % 语法着色配置
-            commentstyle=\color{github-comment}\itshape,
+          }
+          
+          % C/C++语法高亮规则
+          \lstdefinelanguage{custom-c}{
+            keywords={break,case,char,const,continue,default,do,double,else,enum,extern,float,for,goto,if,int,long,register,return,short,signed,sizeof,static,struct,switch,typedef,union,unsigned,void,volatile,while},
             keywordstyle=\color{github-keyword}\bfseries,
+            comment=[l]{//},
+            commentstyle=\color{github-comment}\itshape,
+            comment=[s]{/*}{*/},
             stringstyle=\color{github-string},
-            identifierstyle=\color{github-fg},
+            string=[b]",
+            string=[b]',
             literate=
-              {0}{{\color{github-literal}0}}1
-              {1}{{\color{github-literal}1}}1
-              {2}{{\color{github-literal}2}}1
-              {3}{{\color{github-literal}3}}1
-              {4}{{\color{github-literal}4}}1
-              {5}{{\color{github-literal}5}}1
-              {6}{{\color{github-literal}6}}1
-              {7}{{\color{github-literal}7}}1
-              {8}{{\color{github-literal}8}}1
-              {9}{{\color{github-literal}9}}1
-              {.0}{{\color{github-literal}.0}}2
-              {.1}{{\color{github-literal}.1}}2
-              {.2}{{\color{github-literal}.2}}2
-              {.3}{{\color{github-literal}.3}}2
-              {.4}{{\color{github-literal}.4}}2
-              {.5}{{\color{github-literal}.5}}2
-              {.6}{{\color{github-literal}.6}}2
-              {.7}{{\color{github-literal}.7}}2
-              {.8}{{\color{github-literal}.8}}2
-              {.9}{{\color{github-literal}.9}}2
-              {->}{{\color{github-keyword}->}}2
-              {<-}{{\color{github-keyword}<-}}2
-              {=>}{{\color{github-keyword}=>}}2,
+              {0}{{\color{github-number}0}}1
+              {1}{{\color{github-number}1}}1
+              {2}{{\color{github-number}2}}1
+              {3}{{\color{github-number}3}}1
+              {4}{{\color{github-number}4}}1
+              {5}{{\color{github-number}5}}1
+              {6}{{\color{github-number}6}}1
+              {7}{{\color{github-number}7}}1
+              {8}{{\color{github-number}8}}1
+              {9}{{\color{github-number}9}}1
+              {.0}{{\color{github-number}.0}}2
+              {.1}{{\color{github-number}.1}}2
+              {.2}{{\color{github-number}.2}}2
+              {.3}{{\color{github-number}.3}}2
+              {.4}{{\color{github-number}.4}}2
+              {.5}{{\color{github-number}.5}}2
+              {.6}{{\color{github-number}.6}}2
+              {.7}{{\color{github-number}.7}}2
+              {.8}{{\color{github-number}.8}}2
+              {.9}{{\color{github-number}.9}}2,
+            moredelim=[s][\color{github-type}]{<}{>},
+            morekeywords=[2]{printf,scanf,NULL,true,false},
+            keywordstyle=[2]\color{github-type}\bfseries,
           }
           
-          % C/C++/CPP 专用语法配置
-          \lstdefinelanguage{cpp}{
-            keywords={alignas,alignof,asm,auto,bool,break,case,catch,char,char8_t,char16_t,char32_t,class,const,constexpr,const_cast,continue,decltype,default,delete,do,double,dynamic_cast,else,enum,explicit,export,extern,false,float,for,friend,goto,if,inline,int,long,mutable,namespace,new,noexcept,nullptr,operator,private,protected,public,register,reinterpret_cast,return,short,signed,sizeof,static,static_assert,static_cast,struct,switch,template,this,thread_local,throw,true,try,typedef,typeid,typename,union,unsigned,using,virtual,void,volatile,wchar_t,while},
-            sensitive=true,
-            comment=[l]{//},
-            comment=[s]{/*}{*/},
-            string=[b]",
-            string=[b]',
-            escapeinside={\%*}{*\%},
-          }
-          \lstdefinelanguage{c}{
-            keywords={auto,break,case,char,const,continue,default,do,double,else,enum,extern,float,for,goto,if,int,long,register,return,short,signed,sizeof,static,struct,switch,typedef,union,unsigned,void,volatile,while},
-            sensitive=true,
-            comment=[l]{//},
-            comment=[s]{/*}{*/},
-            string=[b]",
-            string=[b]',
-          }
-          \lstdefinelanguage{c++}{
-            language=cpp,
+          \lstdefinelanguage{custom-cpp}{
+            language=custom-c,
+            keywords={alignas,alignof,asm,auto,bool,break,case,catch,char,char8_t,char16_t,char32_t,class,const,constexpr,const_cast,continue,co_await,co_return,co_yield,decltype,default,delete,do,double,dynamic_cast,else,enum,explicit,export,extern,false,float,for,friend,goto,if,inline,int,long,mutable,namespace,new,noexcept,nullptr,operator,private,protected,public,register,reinterpret_cast,requires,return,short,signed,sizeof,static,static_assert,static_cast,struct,switch,template,this,thread_local,throw,true,try,typedef,typeid,typename,union,unsigned,using,void,volatile,wchar_t,while},
+            keywordstyle=\color{github-keyword}\bfseries,
           }
           
-          % text类型代码块保留GitHub风格
+          % 绑定语言到样式
+          \lstdefinestyle{c-style}{
+            language=custom-c,
+            basicstyle=\ttfamily\normalsize\selectfont,
+            backgroundcolor=\color{github-bg},
+            frame=single,
+            framesep=8pt,
+            framerule=1pt,
+            rulecolor=\color{github-frame},
+            breaklines=true,
+          }
+          
+          \lstdefinestyle{cpp-style}{
+            language=custom-cpp,
+            basicstyle=\ttfamily\normalsize\selectfont,
+            backgroundcolor=\color{github-bg},
+            frame=single,
+            framesep=8pt,
+            framerule=1pt,
+            rulecolor=\color{github-frame},
+            breaklines=true,
+          }
+          
+          % 保留原有text类型样式
           \lstdefinestyle{textstyle}{
-            basicstyle=\ttfamily\normalsize\selectfont\color{github-fg},
+            basicstyle=\ttfamily\normalsize\selectfont,
             backgroundcolor=\color{github-bg},
             frame=leftline,
             framesep=8pt,
             framerule=3pt,
-            rulecolor=\color{github-keyword},
+            rulecolor=\color{github-frame2},
             breaklines=true,
             breakatwhitespace=false,
             breakautoindent=true,
@@ -459,30 +506,11 @@ jobs:
             lineskip=3pt,
             breaklines=true,
             breakindent=2.5em,
-            commentstyle=\color{github-comment}\itshape,
-            keywordstyle=\color{github-keyword}\bfseries,
-            stringstyle=\color{github-string},
           }
-          % ========== 核心修改1 结束 ==========
           
-          \usepackage{graphicx}
-          \usepackage{float}
-          \usepackage{placeins}
-          \usepackage{mdframed}
-          \usepackage{xspace}
-          
-          \usepackage{caption}
-          \captionsetup[figure]{labelformat=empty, textformat=empty}
-          \usepackage{subcaption}
-          \captionsetup[subfigure]{labelformat=empty, textformat=empty}
-          
-          % ========== 核心修改2：GitHub风格引用块/标题/图片 ==========
-          % GitHub风格引用块
-          \definecolor{github-quote-bg}{rgb}{0.97,0.97,0.97}
-          \definecolor{github-quote-frame}{rgb}{0.85,0.85,0.85}
           \newmdenv[
-            backgroundcolor=github-quote-bg,
-            linecolor=github-quote-frame,
+            backgroundcolor=quotebg,
+            linecolor=quoteframe,
             linewidth=1pt,
             roundcorner=5pt,
             innerleftmargin=12pt,
@@ -495,42 +523,18 @@ jobs:
             frametitlebelowskip=6pt
           ]{quotebox}
           
-          % GitHub风格标题样式
-          \usepackage{titlesec}
-          \titleformat{\section}
-            {\normalfont\Large\bfseries\color{black}}
-            {}
-            {0em}
-            {}
-            [\vspace{0.2em}\titlerule]
-          \titleformat{\subsection}
-            {\normalfont\large\bfseries\color{black}}
-            {}
-            {0em}
-            {}
-          \titleformat{\subsubsection}
-            {\normalfont\normalsize\bfseries\color{black}}
-            {}
-            {0em}
-            {}
-          \titlespacing*{\section}{0pt}{1em}{0.5em}
-          \titlespacing*{\subsection}{0pt}{0.8em}{0.4em}
-          \titlespacing*{\subsubsection}{0pt}{0.6em}{0.3em}
-          
-          % GitHub风格图片（居中+无额外边框）
           \usepackage{float}
           \floatplacement{figure}{H}
-          \makeatletter
-          \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-          \makeatother
-          \let\oldincludegraphics\includegraphics
-          \renewcommand{\includegraphics}[2][]{%
-            \begingroup
-            \centering
-            \oldincludegraphics[#1,width=\maxwidth,keepaspectratio]{#2}%
-            \endgroup
-          }
-          % ========== 核心修改2 结束 ==========
+          
+          \usepackage{booktabs}
+          \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+          
+          \usepackage{parskip}
+          \setlength{\parindent}{0pt}
+          \setlength{\parskip}{0.8em}
+          
+          \sloppy
+          \emergencystretch=3em
           
           \usepackage{eso-pic}
           \usepackage{tikz}
@@ -568,12 +572,20 @@ jobs:
           
           \graphicspath{{./}{./resource/}}
           
-          \usepackage{parskip}
-          \setlength{\parindent}{0pt}
-          \setlength{\parskip}{0.8em}
+          \makeatletter
+          \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+          \makeatother
           
-          \sloppy
-          \emergencystretch=3em
+          % GitHub风格图片样式
+          \let\oldincludegraphics\includegraphics
+          \renewcommand{\includegraphics}[2][]{%
+            \begingroup
+            \centering
+            \vspace{0.5em}
+            \oldincludegraphics[#1,width=\maxwidth,border=0]{#2}%
+            \vspace{0.5em}
+            \endgroup
+          }
           
           \usepackage{titletoc}
           \setcounter{tocdepth}{-1}
@@ -607,39 +619,27 @@ jobs:
             return el
           end
           
-          % ========== 核心修改3：代码块语言映射（支持c/cpp/c++） ==========
           function CodeBlock(el)
-            -- 处理text类型代码块
             if el.classes[1] == "text" then
               return pandoc.RawBlock('latex', 
                 '\\begin{lstlisting}[style=textstyle]\n' .. 
                 el.text .. 
                 '\n\\end{lstlisting}')
             end
-            
-            -- 映射c/cpp/c++到对应的listings语言
-            local lang = el.classes[1] or ""
-            if lang == "cpp" or lang == "c++" then
-              lang = "cpp"
-            elseif lang == "c" then
-              lang = "c"
-            end
-            
-            -- 带语法着色的代码块
-            if lang ~= "" then
+            if el.classes[1] == "c" then
               return pandoc.RawBlock('latex', 
-                '\\begin{lstlisting}[language=' .. lang .. ']\n' .. 
-                el.text .. 
-                '\n\\end{lstlisting}')
-            else
-              -- 默认代码块（无特定语言）
-              return pandoc.RawBlock('latex', 
-                '\\begin{lstlisting}\n' .. 
+                '\\begin{lstlisting}[style=c-style]\n' .. 
                 el.text .. 
                 '\n\\end{lstlisting}')
             end
+            if el.classes[1] == "cpp" or el.classes[1] == "c++" then
+              return pandoc.RawBlock('latex', 
+                '\\begin{lstlisting}[style=cpp-style]\n' .. 
+                el.text .. 
+                '\n\\end{lstlisting}')
+            end
+            return el
           end
-          % ========== 核心修改3 结束 ==========
           
           function Str(el)
             local text = el.text
@@ -655,35 +655,6 @@ jobs:
           
           function Image(el)
             el.caption = {}
-            return el
-          end
-          
-          % ========== 核心修改4：支持GitHub常用HTML特性 ==========
-          -- 处理GitHub风格的<span>样式
-          function Span(el)
-            local classes = el.classes
-            local attrs = el.attributes
-            local content = pandoc.write(pandoc.Pandoc({el.content}), "latex")
-            
-            -- 处理高亮（mark）
-            if classes:includes("highlight") or attrs.style and attrs.style:find("background-color") then
-              return pandoc.RawInline('latex', '\\colorbox{yellow!30}{' .. content .. '}')
-            end
-            
-            -- 处理粗体/斜体
-            if classes:includes("bold") then
-              return pandoc.RawInline('latex', '\\textbf{' .. content .. '}')
-            end
-            if classes:includes("italic") then
-              return pandoc.RawInline('latex', '\\textit{' .. content .. '}')
-            end
-            
-            return el
-          end
-          
-          -- 处理GitHub风格的表格
-          function Table(el)
-            -- 保留表格原始样式，适配GitHub渲染
             return el
           end
           EOF
@@ -720,18 +691,18 @@ jobs:
               --listings \
               --include-in-header=header.tex \
               --lua-filter=quote-filter.lua \
-              -V mainfont="Noto Serif CJK SC" \
-              -V sansfont="Noto Sans CJK SC" \
-              -V monofont="Noto Sans Mono CJK SC" \
+              -V mainfont="Inter" \
+              -V sansfont="Inter" \
+              -V monofont="JetBrains Mono" \
               -V geometry:margin=2.0cm \
               -V geometry:a4paper \
               -V colorlinks=true \
-              -V linkcolor=blue \
-              -V urlcolor=blue \
+              -V linkcolor=rgb(0.035,0.419,0.854) \
+              -V urlcolor=rgb(0.035,0.419,0.854) \
               -V graphics \
               --wrap=auto \
-              --highlight-style=tango % 适配GitHub代码高亮风格
-              -f markdown+raw_html+tex_math_single_backslash+github_markdown % 启用GitHub Markdown扩展
+              --highlight-style=tango \
+              -f markdown \
               -M date="$CURRENT_DATE" \
               2>&1 >/dev/null
               
@@ -795,7 +766,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
-          REPO_NAME="${GITHUB_REPOSITORY##*/}" # 核心修改5：获取仓库名称（去掉用户名前缀）
+          REPO_NAME="${{ github.repository_name }}"
           
           mkdir -p pdf_collection
           
@@ -850,7 +821,7 @@ jobs:
           done
           
           cd pdf_collection
-          zip -r "../${REPO_NAME}-${TAG_NAME}.zip" . >/dev/null # 核心修改5：使用仓库名+版本号命名压缩包
+          zip -r "../${REPO_NAME}-${TAG_NAME}.zip" . >/dev/null
           cd ..
           
           rm -rf pdf_collection
@@ -872,7 +843,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "${{ github.ref_name }}"
           files: |
-            ${{ github.repository_owner != '' && format('{0}-{1}.zip', github.event.repository.name, github.ref_name) || format('pdf-documents-{0}.zip', github.ref_name) }} # 核心修改5：Release上传仓库名命名的压缩包
+            ${{ github.repository_name }}-${{ github.ref_name }}.zip
           draft: false
           prerelease: false
           generate_release_notes: true
