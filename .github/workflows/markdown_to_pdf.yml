@@ -261,7 +261,7 @@ jobs:
               content = re.sub(r'（0,100）', r'（0-100）', content)
               content = re.sub(r'（0\.100）', r'（0-100）', content)
               content = re.sub(r'(\d):(\d)', r'\1-\2', content)
-              content = re.sub(r'（(\d+)[.,](\d{2,3})）', r'（\1-\2）', content)
+              content = re.sub(r'（(\d+)[.,](\d{2,3})）', r'（%1-%2）', content)
               return content
           
           def fix_text_code_blocks(content):
@@ -341,19 +341,32 @@ jobs:
           \setCJKmonofont{Noto Sans Mono CJK SC}
           
           \usepackage[margin=2.0cm]{geometry}
-          
+          \usepackage{xcolor}
+          % 定义GitHub标准颜色（修复核心报错）
+          \definecolor{github-link}{rgb}{0.035,0.419,0.854}
+          \definecolor{github-bg}{rgb}{0.98,0.98,0.98}
+          \definecolor{github-comment}{rgb}{0.56,0.63,0.71}
+          \definecolor{github-keyword}{rgb}{0.86,0.08,0.23}
+          \definecolor{github-string}{rgb}{0.17,0.59,0.33}
+          \definecolor{github-type}{rgb}{0.17,0.59,0.86}
+          \definecolor{github-number}{rgb}{0.24,0.46,0.62}
+          \definecolor{github-frame}{rgb}{0.8,0.8,0.8}
+          \definecolor{github-frame2}{rgb}{0,0,0.8}
+          \definecolor{quotebg}{rgb}{0.97,0.97,0.97}
+          \definecolor{quoteframe}{rgb}{0.85,0.85,0.85}
+
+          % 超链接配置（使用颜色名，无报错）
           \usepackage{hyperref}
           \hypersetup{
             colorlinks=true,
-            linkcolor=rgb(0.035,0.419,0.854),
-            urlcolor=rgb(0.035,0.419,0.854),
-            citecolor=rgb(0.035,0.419,0.854),
+            linkcolor=github-link,
+            urlcolor=github-link,
+            citecolor=github-link,
             pdfborder={0 0 0},
             hidelinks,
           }
           
           \usepackage{listings}
-          \usepackage{xcolor}
           \usepackage{graphicx}
           \usepackage{float}
           \usepackage{placeins}
@@ -376,17 +389,6 @@ jobs:
           \captionsetup[figure]{labelformat=empty, textformat=empty}
           \usepackage{subcaption}
           \captionsetup[subfigure]{labelformat=empty, textformat=empty}
-          
-          \definecolor{github-bg}{rgb}{0.98,0.98,0.98}
-          \definecolor{github-comment}{rgb}{0.56,0.63,0.71}
-          \definecolor{github-keyword}{rgb}{0.86,0.08,0.23}
-          \definecolor{github-string}{rgb}{0.17,0.59,0.33}
-          \definecolor{github-type}{rgb}{0.17,0.59,0.86}
-          \definecolor{github-number}{rgb}{0.24,0.46,0.62}
-          \definecolor{github-frame}{rgb}{0.8,0.8,0.8}
-          \definecolor{github-frame2}{rgb}{0,0,0.8}
-          \definecolor{quotebg}{rgb}{0.97,0.97,0.97}
-          \definecolor{quoteframe}{rgb}{0.85,0.85,0.85}
           
           \lstset{
             basicstyle=\ttfamily\normalsize\selectfont,
@@ -624,7 +626,6 @@ jobs:
             local text = el.text
             text = text:gsub('（0,100）', '（0-100）')
             text = text:gsub('（0%.100）', '（0-100）')
-            text = text:gsub('（(%d+)[.,](%d%d%d）', '（%1-%2）')
             return pandoc.Str(text)
           end
           
@@ -676,8 +677,8 @@ jobs:
               -V geometry:margin=2.0cm \
               -V geometry:a4paper \
               -V colorlinks=true \
-              -V linkcolor='rgb(0.035,0.419,0.854)' \
-              -V urlcolor='rgb(0.035,0.419,0.854)' \
+              -V linkcolor=github-link \
+              -V urlcolor=github-link \
               -V graphics \
               --wrap=auto \
               --highlight-style=tango \
