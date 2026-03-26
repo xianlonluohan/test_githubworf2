@@ -1,4 +1,4 @@
-name: "Markdown to PDF Converter with Tiled Watermark"
+name: "Markdown to PDF Converter with GitHub Style"
 
 on:
   push:
@@ -303,7 +303,6 @@ jobs:
                   
                   processed_content = fix_tilde_in_text(processed_content)
                   
-                  # 保留GitHub支持的HTML标签
                   processed_content = re.sub(r'<(?!@@@CODE_BLOCK_|@@@INLINE_CODE_|@@@QUOTE_BLOCK_)(?!\/?code>)(?!\/?pre>)(?!\/?span>)(?!\/?div>)(?!\/?p>)(?!\/?br>)(?!\/?strong>)(?!\/?em>)(?!\/?b>)(?!\/?i>)[^>]+>', '', processed_content)
                   
                   final_content = restore_code_blocks(processed_content, code_blocks, inline_code_blocks, quote_blocks)
@@ -334,7 +333,6 @@ jobs:
           cat > header.tex << 'EOF'
           \usepackage{xeCJK}
           \usepackage[UTF8]{ctex}
-          % GitHub风格字体配置
           \setmainfont{Inter}
           \setsansfont{Inter}
           \setCJKmainfont{Noto Sans CJK SC}
@@ -344,7 +342,6 @@ jobs:
           
           \usepackage[margin=2.0cm]{geometry}
           
-          % GitHub风格超链接
           \usepackage{hyperref}
           \hypersetup{
             colorlinks=true,
@@ -362,8 +359,8 @@ jobs:
           \usepackage{placeins}
           \usepackage{mdframed}
           \usepackage{xspace}
-          % GitHub风格标题样式
           \usepackage{titlesec}
+          
           \titleformat{\section}{\Large\bfseries\sffamily}{}{0em}{}
           \titlespacing{\section}{0pt}{1em}{0.5em}
           \titleformat{\subsection}{\large\bfseries\sffamily}{}{0em}{}
@@ -380,7 +377,6 @@ jobs:
           \usepackage{subcaption}
           \captionsetup[subfigure]{labelformat=empty, textformat=empty}
           
-          % GitHub风格代码高亮颜色
           \definecolor{github-bg}{rgb}{0.98,0.98,0.98}
           \definecolor{github-comment}{rgb}{0.56,0.63,0.71}
           \definecolor{github-keyword}{rgb}{0.86,0.08,0.23}
@@ -392,7 +388,6 @@ jobs:
           \definecolor{quotebg}{rgb}{0.97,0.97,0.97}
           \definecolor{quoteframe}{rgb}{0.85,0.85,0.85}
           
-          % 通用listings配置
           \lstset{
             basicstyle=\ttfamily\normalsize\selectfont,
             backgroundcolor=\color{github-bg},
@@ -417,7 +412,6 @@ jobs:
             breaklines=true,
           }
           
-          % C/C++语法高亮规则
           \lstdefinelanguage{custom-c}{
             keywords={break,case,char,const,continue,default,do,double,else,enum,extern,float,for,goto,if,int,long,register,return,short,signed,sizeof,static,struct,switch,typedef,union,unsigned,void,volatile,while},
             keywordstyle=\color{github-keyword}\bfseries,
@@ -437,17 +431,7 @@ jobs:
               {6}{{\color{github-number}6}}1
               {7}{{\color{github-number}7}}1
               {8}{{\color{github-number}8}}1
-              {9}{{\color{github-number}9}}1
-              {.0}{{\color{github-number}.0}}2
-              {.1}{{\color{github-number}.1}}2
-              {.2}{{\color{github-number}.2}}2
-              {.3}{{\color{github-number}.3}}2
-              {.4}{{\color{github-number}.4}}2
-              {.5}{{\color{github-number}.5}}2
-              {.6}{{\color{github-number}.6}}2
-              {.7}{{\color{github-number}.7}}2
-              {.8}{{\color{github-number}.8}}2
-              {.9}{{\color{github-number}.9}}2,
+              {9}{{\color{github-number}9}}1,
             moredelim=[s][\color{github-type}]{<}{>},
             morekeywords=[2]{printf,scanf,NULL,true,false},
             keywordstyle=[2]\color{github-type}\bfseries,
@@ -459,7 +443,6 @@ jobs:
             keywordstyle=\color{github-keyword}\bfseries,
           }
           
-          % 绑定语言到样式
           \lstdefinestyle{c-style}{
             language=custom-c,
             basicstyle=\ttfamily\normalsize\selectfont,
@@ -482,7 +465,6 @@ jobs:
             breaklines=true,
           }
           
-          % 保留原有text类型样式
           \lstdefinestyle{textstyle}{
             basicstyle=\ttfamily\normalsize\selectfont,
             backgroundcolor=\color{github-bg},
@@ -519,8 +501,6 @@ jobs:
             innerbottommargin=8pt,
             skipabove=6pt,
             skipbelow=6pt,
-            frametitleaboveskip=6pt,
-            frametitlebelowskip=6pt
           ]{quotebox}
           
           \usepackage{float}
@@ -576,7 +556,6 @@ jobs:
           \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
           \makeatother
           
-          % GitHub风格图片样式
           \let\oldincludegraphics\includegraphics
           \renewcommand{\includegraphics}[2][]{%
             \begingroup
@@ -697,8 +676,8 @@ jobs:
               -V geometry:margin=2.0cm \
               -V geometry:a4paper \
               -V colorlinks=true \
-              -V linkcolor=rgb(0.035,0.419,0.854) \
-              -V urlcolor=rgb(0.035,0.419,0.854) \
+              -V linkcolor='rgb(0.035,0.419,0.854)' \
+              -V urlcolor='rgb(0.035,0.419,0.854)' \
               -V graphics \
               --wrap=auto \
               --highlight-style=tango \
